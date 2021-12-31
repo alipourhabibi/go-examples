@@ -35,3 +35,12 @@ func (p *Post) UpdatePost() {
 	post.Text = p.Text
 	post.UpdatePost()
 }
+
+func (p *Post) DeletePost() {
+	post := repo.NewPostStruct()
+	post.ID = p.ID
+	post.Username = p.Username
+	post.Title = p.Title
+	post.Text = p.Text
+	post.DeletePost()
+}

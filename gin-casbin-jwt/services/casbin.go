@@ -6,7 +6,7 @@ import (
 )
 
 func GetEnforcer(adapter *gormadapter.Adapter) (*casbin.Enforcer, error) {
-	return casbin.NewEnforcer("conf/abac_model.conf", adapter)
+	return casbin.NewEnforcer("conf/acl_model.conf", adapter)
 }
 
 func Enforce(sub, obj, act string, adapter *gormadapter.Adapter) (bool, error) {

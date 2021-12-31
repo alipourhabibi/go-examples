@@ -15,6 +15,7 @@ func InitRouters() *gin.Engine {
 
 	r.POST("post", api.NewPost)
 	r.PUT("post/:id", api.UpdatePost)
+	r.DELETE("post/:id", api.DeletePost)
 
 	r.Use(middleware.AuthMiddleware())
 	return r

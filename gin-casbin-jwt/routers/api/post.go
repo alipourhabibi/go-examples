@@ -89,3 +89,54 @@ func UpdatePost(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"msg": "Updated successfully"})
 }
+
+func DeletePost(c *gin.Context) {
+	// make gorm adapter enforcing
+	db := repo.GetDB()
+	adapter, err := gormadapter.NewAdapterByDB(db)
+	if err != nil {
+		panic(err)
+	}
+	var post Post
+	if err := c.ShouldBindJSON(&post); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+	authorization := c.Request.Header.Get("Authorization")
+	content := strings.Split(authorization, " ")
+	token := content[1]
+	username, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+
+	ID := c.Param("id")
+	if ID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+	intID, err := strconv.Atoi(ID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+	postModel := models.NewPostStruct()
+	postModel.ID = intID
+	postModel.Title = post.Title
+	postModel.Text = post.Text
+	newPost := postModel.GetPostById()
+
+	ok, err := services.Enforce(username, newPost.Username, "delete", adapter)
+	if err != nil {
+		fmt.Println(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
+		c.Abort()
+		return
+	}
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		c.Abort()
+		return
+	}
+	postModel.DeletePost()
+
+	c.JSON(http.StatusOK, gin.H{"msg": "Deleted successfully"})
+
+}

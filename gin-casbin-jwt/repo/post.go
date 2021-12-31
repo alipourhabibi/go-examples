@@ -32,3 +32,8 @@ func (p *Post) UpdatePost() {
 	db := GetDB()
 	db.Model(&Post{}).Where("id = ? ", p.ID).Updates(Post{Title: p.Title, Text: p.Text})
 }
+
+func (p *Post) DeletePost() {
+	db := GetDB()
+	db.Model(&Post{}).Where("id = ? ", p.ID).Delete(&Post{})
+}
