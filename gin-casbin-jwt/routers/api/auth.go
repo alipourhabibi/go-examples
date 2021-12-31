@@ -83,11 +83,14 @@ func Register(c *gin.Context) {
 
 	u.Save()
 
+
 	db := repo.GetDB()
 	adapter, err := gormadapter.NewAdapterByDB(db)
 	if err != nil {
 		panic(err)
 	}
-	services.AddPolicy(user.Username, adapter)
+	services.AddPolicy(u.Username, u.Username, "update", adapter)
+	services.AddPolicy(u.Username, u.Username, "delete", adapter)
+
 	c.JSON(http.StatusCreated, gin.H{"msg": "created"})
 }

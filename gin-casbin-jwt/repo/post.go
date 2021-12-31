@@ -1,12 +1,15 @@
 package repo
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 type Post struct {
 	gorm.Model
-	UserName string `json:"username"`
-	Title string `json:"title"`
-	Text string `json:"text"`
+	ID int `gorm:"id" json:"id"`
+	Username string `gorm:"username" json:"username"`
+	Title string `gorm:"title" json:"title"`
+	Text string `gorm:"text" json:"text"`
 }
 
 func NewPostStruct() *Post {
@@ -16,4 +19,16 @@ func NewPostStruct() *Post {
 func (p *Post) NewPost() {
 	db := GetDB()
 	db.Create(p)
+}
+
+func (p *Post) GetPostById() Post {
+	post := Post{}
+	db := GetDB()
+	db.First(&post, "id = ? ", p.ID)
+	return post
+}
+
+func (p *Post) UpdatePost() {
+	db := GetDB()
+	db.Model(&Post{}).Where("id = ? ", p.ID).Updates(Post{Title: p.Title, Text: p.Text})
 }

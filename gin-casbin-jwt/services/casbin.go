@@ -25,10 +25,10 @@ func Enforce(sub, obj, act string, adapter *gormadapter.Adapter) (bool, error) {
 	return ok, nil
 }
 
-func AddPolicy(username string, adapter *gormadapter.Adapter) {
+func AddPolicy(username, obj, action string, adapter *gormadapter.Adapter) {
 	enforcer, err := GetEnforcer(adapter)
 	if err != nil {
 		panic(err)
 	}
-	enforcer.AddPolicy(username, "resource", "write")
+	enforcer.AddPolicy(username, obj, action)
 }
