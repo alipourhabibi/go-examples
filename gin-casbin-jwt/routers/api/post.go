@@ -138,5 +138,21 @@ func DeletePost(c *gin.Context) {
 	postModel.DeletePost()
 
 	c.JSON(http.StatusOK, gin.H{"msg": "Deleted successfully"})
+}
 
+func GetPost(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+	intId, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+	post := models.NewPostStruct()
+	post.ID = intId
+	postData := post.GetPostById()
+	c.JSON(http.StatusOK, gin.H{"msg": "success", "datas": postData})
 }
