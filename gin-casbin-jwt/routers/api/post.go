@@ -10,7 +10,9 @@ import (
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/repo"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/services"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/settings"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 )
@@ -29,11 +31,31 @@ func NewPost(c *gin.Context) {
 	authorization := c.Request.Header.Get("Authorization")
 	content := strings.Split(authorization, " ")
 	token := content[1]
-	username, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+	dataMap, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
 
 	p := models.NewPostStruct()
 	p.Title = post.Title
 	p.Text = post.Text
+
+	claims, ok := dataMap.Claims.(jwt.MapClaims)
+	username, ok := claims["username"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	uuid, ok := claims["access_uuid"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	redisClient := repo.GetRedisClient()
+	_, err := redisClient.Get(uuid).Result()
+	// user does'nt exist on redis
+	if err == redis.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	
 	p.Username = username
 	p.NewPost()
 	
@@ -55,7 +77,27 @@ func UpdatePost(c *gin.Context) {
 	authorization := c.Request.Header.Get("Authorization")
 	content := strings.Split(authorization, " ")
 	token := content[1]
-	username, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+
+	dataMap, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+	claims, ok := dataMap.Claims.(jwt.MapClaims)
+	username, ok := claims["username"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+
+	uuid, ok := claims["access_uuid"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	redisClient := repo.GetRedisClient()
+	_, err = redisClient.Get(uuid).Result()
+	// user does'nt exist on redis
+	if err == redis.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
 
 	ID := c.Param("id")
 	if ID == "" {
@@ -73,7 +115,7 @@ func UpdatePost(c *gin.Context) {
 	postModel.Text = post.Text
 	newPost := postModel.GetPostById()
 
-	ok, err := services.Enforce(username, newPost.Username, "update", adapter)
+	ok, err = services.Enforce(username, newPost.Username, "update", adapter)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
@@ -105,7 +147,26 @@ func DeletePost(c *gin.Context) {
 	authorization := c.Request.Header.Get("Authorization")
 	content := strings.Split(authorization, " ")
 	token := content[1]
-	username, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+	dataMap, _ := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+	claims, ok := dataMap.Claims.(jwt.MapClaims)
+	username, ok := claims["username"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+
+	uuid, ok := claims["access_uuid"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	redisClient := repo.GetRedisClient()
+	_, err = redisClient.Get(uuid).Result()
+	// user does'nt exist on redis
+	if err == redis.Nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
 
 	ID := c.Param("id")
 	if ID == "" {
@@ -123,7 +184,7 @@ func DeletePost(c *gin.Context) {
 	postModel.Text = post.Text
 	newPost := postModel.GetPostById()
 
-	ok, err := services.Enforce(username, newPost.Username, "delete", adapter)
+	ok, err = services.Enforce(username, newPost.Username, "delete", adapter)
 	if err != nil {
 		fmt.Println(err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})

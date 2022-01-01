@@ -14,6 +14,7 @@ func InitRouters() *gin.Engine {
 	{
 		v1.POST("register", api.Register)
 		v1.POST("login", api.LogIn)
+		v1.POST("logout", middleware.AuthMiddleware(), api.LogOut)
 
 		v1.GET("post/:id", api.GetPost)
 		v1.POST("post", middleware.AuthMiddleware(), api.NewPost)

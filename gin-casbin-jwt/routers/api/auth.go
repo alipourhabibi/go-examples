@@ -2,12 +2,14 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/models"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/repo"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/services"
+	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/settings"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
-
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
 
@@ -43,7 +45,7 @@ func LogIn(c *gin.Context) {
 		return
 	}
 
-	td, err := services.CreateTokens(userData.Username)
+	td, err := services.CreateTokensAndMetaData(userData.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
 		return	
@@ -87,4 +89,39 @@ func Register(c *gin.Context) {
 	services.AddPolicy(u.Username, u.Username, "delete", adapter)
 
 	c.JSON(http.StatusCreated, gin.H{"msg": "created"})
+}
+
+func LogOut(c *gin.Context) {
+	authorization := c.Request.Header.Get("Authorization")
+	content := strings.Split(authorization, " ")
+	token := content[1]
+
+	dataMap, err := services.VerifyJWT(token, settings.AppSettings.Items.JwtAccess)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "You are not loged in"})
+		return
+	}
+	claims, ok := dataMap.Claims.(jwt.MapClaims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+
+	redisClient := repo.GetRedisClient()
+
+	accessUUID, ok := claims["access_uuid"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	username, ok := claims["username"].(string)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+	refreshUUID := accessUUID + "++" + username
+
+	redisClient.Del(refreshUUID)
+	redisClient.Del(accessUUID)
+
 }
