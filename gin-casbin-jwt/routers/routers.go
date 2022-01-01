@@ -10,14 +10,16 @@ import (
 func InitRouters() *gin.Engine {
 	r := gin.Default()
 	
-	r.POST("register", api.Register)
-	r.POST("login", api.LogIn)
+	v1 := r.Group("api/v1")
+	{
+		v1.POST("register", api.Register)
+		v1.POST("login", api.LogIn)
 
-	r.POST("post", api.NewPost)
-	r.PUT("post/:id", api.UpdatePost)
-	r.DELETE("post/:id", api.DeletePost)
+		v1.POST("post", middleware.AuthMiddleware(), api.NewPost)
+		v1.PUT("post/:id", middleware.AuthMiddleware(), api.UpdatePost)
+		v1.DELETE("post/:id", middleware.AuthMiddleware(), api.DeletePost)
+	}
 
-	r.Use(middleware.AuthMiddleware())
 	return r
 }
 	
