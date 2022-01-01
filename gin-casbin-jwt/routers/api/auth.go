@@ -6,7 +6,6 @@ import (
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/models"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/repo"
 	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/services"
-	"github.com/alipourhabibi/go-examples/gin-casbin-jwt/settings"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 
 	"github.com/gin-gonic/gin"
@@ -44,18 +43,13 @@ func LogIn(c *gin.Context) {
 		return
 	}
 
-	//TODO make a service function to do this job
-	accessToken, err := services.GenerateJWT(userData.Username, settings.AppSettings.Items.JwtAccess)
+	td, err := services.CreateTokens(userData.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
-		return
+		return	
 	}
-	refreshToken , err := services.GenerateJWT(userData.Username, settings.AppSettings.Items.JwtRefresh)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
+
+	c.JSON(http.StatusOK, gin.H{"access_token": td.AccessToken, "refresh_token": td.RefreshToken})
 }
 
 func Register(c *gin.Context) {
