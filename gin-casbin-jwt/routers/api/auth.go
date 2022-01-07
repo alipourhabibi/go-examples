@@ -125,3 +125,39 @@ func LogOut(c *gin.Context) {
 	redisClient.Del(accessUUID)
 
 }
+
+func Refresh(c *gin.Context) {
+	token := struct {
+		RefreshToken string `json:"refresh_token" binding:"required"`
+	}{}
+	if err := c.ShouldBindJSON(&token); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+		return
+	}
+
+	jwtToken, err := services.VerifyJWT(token.RefreshToken, settings.AppSettings.Items.JwtRefresh)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+		return
+	}
+
+	// get uuid
+	claims, ok := jwtToken.Claims.(jwt.MapClaims)
+	if ok {
+		username, usernameOK := claims["username"].(string)		
+		if !usernameOK {
+			c.JSON(http.StatusUnauthorized, gin.H{"msg": "Unauthorized"})
+			return
+		}
+		td, err := services.CreateTokensAndMetaData(username)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"msg": "OK", "refresh_token": td.RefreshToken, "access_token": td.AccessToken})
+		return
+	} else {
+		c.JSON(http.StatusUnauthorized, gin.H{"msg": "token expired"})
+		return
+	}
+}
