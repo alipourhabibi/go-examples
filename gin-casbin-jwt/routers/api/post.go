@@ -18,10 +18,32 @@ import (
 )
 
 type Post struct {
+	// Required: true
+	// Example: title
 	Title string `json:"title" binding:"required"`
+	// Required: true
+	// Example: text
 	Text string `json:"text" binding:"required"`
 }
 
+// swagger:route POST /api/v1/post NewPost newPostParameter
+//
+//	used by user to add new post
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: responseCreated
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//
+// Handler function to add new post
 func NewPost(c *gin.Context) {
 	var post Post
 	if err := c.ShouldBindJSON(&post); err != nil {
@@ -62,6 +84,25 @@ func NewPost(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"msg": "created"})
 }
 
+// swagger:route PUT /api/v1/post/:id UpdatePost updatePostParameter
+//
+//	used by user to add new post
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: responseSuccess
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//	500: responseInternalServerError
+//
+// Handler function to update post
 func UpdatePost(c *gin.Context) {
 	// make gorm adapter enforcing
 	db := repo.GetDB()
@@ -129,9 +170,28 @@ func UpdatePost(c *gin.Context) {
 	}
 	postModel.UpdatePost()
 
-	c.JSON(http.StatusOK, gin.H{"msg": "Updated successfully"})
+	c.JSON(http.StatusOK, gin.H{"msg": "Success"})
 }
 
+// swagger:route DELETE /api/v1/post/:id DeletePost deletePostParameter
+//
+//	used by user to delete post
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: responseSuccess
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//	500: responseInternalServerError
+//
+// Handler function to delete post
 func DeletePost(c *gin.Context) {
 	// make gorm adapter enforcing
 	db := repo.GetDB()
@@ -139,9 +199,8 @@ func DeletePost(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
-	var post Post
-	if err := c.ShouldBindJSON(&post); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
+	var post Post 
+	if err := c.ShouldBindJSON(&post); err != nil { c.JSON(http.StatusBadRequest, gin.H{"msg": "Invalid JSON provided"})
 		return
 	}
 	authorization := c.Request.Header.Get("Authorization")
@@ -198,9 +257,24 @@ func DeletePost(c *gin.Context) {
 	}
 	postModel.DeletePost()
 
-	c.JSON(http.StatusOK, gin.H{"msg": "Deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"msg": "Suceess"})
 }
 
+// swagger:route GET /api/v1/post/:id GetPost getPostParameter
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: responseGetDataSuccess
+//	400: responseBadRequest
+//
+// Handler function to delete post
 func GetPost(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
@@ -215,5 +289,5 @@ func GetPost(c *gin.Context) {
 	post := models.NewPostStruct()
 	post.ID = intId
 	postData := post.GetPostById()
-	c.JSON(http.StatusOK, gin.H{"msg": "success", "datas": postData})
+	c.JSON(http.StatusOK, gin.H{"msg": "Success", "datas": postData})
 }

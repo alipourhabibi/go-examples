@@ -14,16 +14,45 @@ import (
 )
 
 type LogInUser struct {
+	// Required: true
+	// Example: ali
 	Username string `json:"username" binding:"required"`
+	// Required: true
+	// Example: 1234
 	Password string `json:"password" binding:"required"`
 }
 
 type RegisterUser struct {
+	// Required: true
+	// Example: ali
 	Username string `json:"username" binding:"required"`
+	// Required: true
+	// Example: 1234
 	Password string `json:"password" binding:"required"`
+	// Required: true
+	// Example: 1234
 	Passwrod2 string `json:"password2" binding:"required"`
 }
 
+// swagger:route POST /api/v1/login Login loginUserParameter
+//
+//	used by user to login to the app
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: loginSuccess
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//	500: responseInternalServerError
+//
+// Handler function for login
 func LogIn(c *gin.Context) {
 	var user LogInUser
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -54,6 +83,24 @@ func LogIn(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"access_token": td.AccessToken, "refresh_token": td.RefreshToken})
 }
 
+// swagger:route POST /api/v1/register Register registerUserParameter
+//
+//	used by user to register to the app
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	201: responseCreated
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//
+// Handler function for register
 func Register(c *gin.Context) {
 	var user RegisterUser
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -91,6 +138,24 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"msg": "created"})
 }
 
+// swagger:route POST /api/v1/logout LogOut logOutUserParameter
+//
+//	used by user to logout
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: responseSuccess
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//
+// Handler function to logout
 func LogOut(c *gin.Context) {
 	authorization := c.Request.Header.Get("Authorization")
 	content := strings.Split(authorization, " ")
@@ -123,9 +188,29 @@ func LogOut(c *gin.Context) {
 
 	redisClient.Del(refreshUUID)
 	redisClient.Del(accessUUID)
+	c.JSON(http.StatusOK, gin.H{"msg": "Success"})
 
 }
 
+// swagger:route POST /api/v1/refresh Refresh refreshTokenParameter
+//
+//	used by user to refresh token
+//
+//	consumes:
+//	- application/json
+//
+//	produces:
+//	- application/json
+//
+//	schemes: http, https
+//	
+//	Responses:
+//	200: loginSuccess
+//	400: responseBadRequest
+//	401: responseUnauthorized
+//	500: responseInternalServerError
+//
+// Handler function to refresh Token
 func Refresh(c *gin.Context) {
 	token := struct {
 		RefreshToken string `json:"refresh_token" binding:"required"`
@@ -154,7 +239,7 @@ func Refresh(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"msg": "Internal server error"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"msg": "OK", "refresh_token": td.RefreshToken, "access_token": td.AccessToken})
+		c.JSON(http.StatusOK, gin.H{"refresh_token": td.RefreshToken, "access_token": td.AccessToken})
 		return
 	} else {
 		c.JSON(http.StatusUnauthorized, gin.H{"msg": "token expired"})

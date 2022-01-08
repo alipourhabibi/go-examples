@@ -1,0 +1,403 @@
+basePath: /
+consumes:
+- application/json
+- 'Produce:'
+- application/json
+definitions:
+  LogInUser:
+    properties:
+      password:
+        example: "1234"
+        type: string
+        x-go-name: Password
+      username:
+        example: ali
+        type: string
+        x-go-name: Username
+    required:
+    - username
+    - password
+    type: object
+    x-go-package: github.com/alipourhabibi/go-examples/gin-casbin-jwt/routers/api
+  Post:
+    properties:
+      text:
+        example: text
+        type: string
+        x-go-name: Text
+      title:
+        example: title
+        type: string
+        x-go-name: Title
+    required:
+    - title
+    - text
+    type: object
+    x-go-package: github.com/alipourhabibi/go-examples/gin-casbin-jwt/routers/api
+  RegisterUser:
+    properties:
+      password:
+        example: "1234"
+        type: string
+        x-go-name: Password
+      password2:
+        example: "1234"
+        type: string
+        x-go-name: Passwrod2
+      username:
+        example: ali
+        type: string
+        x-go-name: Username
+    required:
+    - username
+    - password
+    - password2
+    type: object
+    x-go-package: github.com/alipourhabibi/go-examples/gin-casbin-jwt/routers/api
+host: localhost
+info:
+  contact:
+    email: ali.pourhabibi1379@gmail.com
+  description: "the purpose of this application is to provide an example of jwt, casbin,
+    \ngin, swagger, redis, gorm and etc...\n\nTerm Of Service:\n\nthere are no term
+    of services"
+  license:
+    name: MIT
+    url: http://opensource.org/licenses/MIT
+  title: gin-casbin-jwt API
+  version: "1.0"
+paths:
+  /api/v1/login:
+    post:
+      consumes:
+      - application/json
+      description: used by user to login to the app
+      operationId: loginUserParameter
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/LogInUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/loginSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+        "500":
+          $ref: '#/responses/responseInternalServerError'
+      schemes:
+      - http
+      - https
+      tags:
+      - Login
+  /api/v1/logout:
+    post:
+      consumes:
+      - application/json
+      description: used by user to logout
+      operationId: logOutUserParameter
+      parameters:
+      - example: Bearer TOKEN
+        in: header
+        name: authorization
+        required: true
+        type: string
+        x-go-name: Authorization
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/responseSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+      schemes:
+      - http
+      - https
+      tags:
+      - LogOut
+  /api/v1/post:
+    post:
+      consumes:
+      - application/json
+      description: used by user to add new post
+      operationId: newPostParameter
+      parameters:
+      - example: Bearer TOKEN
+        in: header
+        name: authorization
+        required: true
+        type: string
+        x-go-name: Authorization
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Post'
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/responseCreated'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+      schemes:
+      - http
+      - https
+      tags:
+      - NewPost
+  /api/v1/post/:id:
+    delete:
+      consumes:
+      - application/json
+      description: used by user to delete post
+      operationId: deletePostParameter
+      parameters:
+      - example: Bearer TOKEN
+        in: header
+        name: authorization
+        required: true
+        type: string
+        x-go-name: Authorization
+      - in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Post'
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/responseSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+        "500":
+          $ref: '#/responses/responseInternalServerError'
+      schemes:
+      - http
+      - https
+      tags:
+      - DeletePost
+    get:
+      consumes:
+      - application/json
+      operationId: getPostParameter
+      parameters:
+      - in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/responseGetDataSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+      schemes:
+      - http
+      - https
+      tags:
+      - GetPost
+    put:
+      consumes:
+      - application/json
+      description: used by user to add new post
+      operationId: updatePostParameter
+      parameters:
+      - example: Bearer TOKEN
+        in: header
+        name: authorization
+        required: true
+        type: string
+        x-go-name: Authorization
+      - in: path
+        name: id
+        required: true
+        type: string
+        x-go-name: ID
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/Post'
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/responseSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+        "500":
+          $ref: '#/responses/responseInternalServerError'
+      schemes:
+      - http
+      - https
+      tags:
+      - UpdatePost
+  /api/v1/refresh:
+    post:
+      consumes:
+      - application/json
+      description: used by user to refresh token
+      operationId: refreshTokenParameter
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          properties:
+            refresh_token:
+              example: TOKEN
+              type: string
+              x-go-name: RefreshToken
+          required:
+          - refresh_token
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          $ref: '#/responses/loginSuccess'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+        "500":
+          $ref: '#/responses/responseInternalServerError'
+      schemes:
+      - http
+      - https
+      tags:
+      - Refresh
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: used by user to register to the app
+      operationId: registerUserParameter
+      parameters:
+      - in: body
+        name: Body
+        schema:
+          $ref: '#/definitions/RegisterUser'
+      produces:
+      - application/json
+      responses:
+        "201":
+          $ref: '#/responses/responseCreated'
+        "400":
+          $ref: '#/responses/responseBadRequest'
+        "401":
+          $ref: '#/responses/responseUnauthorized'
+      schemes:
+      - http
+      - https
+      tags:
+      - Register
+responses:
+  loginSuccess:
+    description: ""
+    schema:
+      properties:
+        access_token:
+          example: TOKEN
+          type: string
+          x-go-name: AccessToken
+        refresh_token:
+          example: TOKEN
+          type: string
+          x-go-name: RefreshToken
+      type: object
+  responseBadRequest:
+    description: ""
+    schema:
+      properties:
+        msg:
+          example: Invalid JSON provided
+          type: string
+          x-go-name: MSG
+      type: object
+  responseCreated:
+    description: ""
+    schema:
+      properties:
+        msg:
+          example: created
+          type: string
+          x-go-name: MSG
+      type: object
+  responseGetDataSuccess:
+    description: ""
+    schema:
+      properties:
+        datas:
+          properties:
+            id:
+              example: 1
+              format: int64
+              type: integer
+              x-go-name: ID
+            text:
+              example: text
+              type: string
+              x-go-name: Text
+            title:
+              example: title
+              type: string
+              x-go-name: Title
+            username:
+              example: ali
+              type: string
+              x-go-name: Username
+          type: object
+          x-go-name: Datas
+        msg:
+          example: Success
+          type: string
+          x-go-name: MSG
+      type: object
+  responseInternalServerError:
+    description: ""
+    schema:
+      properties:
+        msg:
+          example: Internal server error
+          type: string
+          x-go-name: MSG
+      type: object
+  responseSuccess:
+    description: ""
+    schema:
+      properties:
+        msg:
+          example: Success
+          type: string
+          x-go-name: MSG
+      type: object
+  responseUnauthorized:
+    description: ""
+    schema:
+      properties:
+        msg:
+          example: Unauthorized
+          type: string
+          x-go-name: MSG
+      type: object
+schemes:
+- http
+- https
+swagger: "2.0"
